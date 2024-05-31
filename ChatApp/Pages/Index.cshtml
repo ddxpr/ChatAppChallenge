@@ -1,10 +1,18 @@
 ﻿@page
+
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
+
 @model IndexModel
 @{
     ViewData["Title"] = "Chat";
 }
 
 <div class="container">
+@if (SignInManager.IsSignedIn(User))
+{
     <h1>Chat Room</h1>
     <div id="chat" class="border p-3 mb-3" style="max-height: 400px; overflow-y: auto;">
         @foreach (var message in Model.Messages)
@@ -23,4 +31,14 @@
         </div>
         <button type="submit" class="btn btn-primary">Send</button>
     </form>
+}
+else
+{
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
+        </li>
+}
 </div>
