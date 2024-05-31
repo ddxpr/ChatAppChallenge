@@ -1,19 +1,27 @@
 ﻿@page
-
-@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
-
-
 @model IndexModel
+@using System.Text
 @{
     ViewData["Title"] = "Chat";
+
+    var options = new StringBuilder();
+    foreach (var chatRoom in Model.ChatRooms)
+    {
+        var selected = chatRoom.Id == Model.CurrentChatRoomId ? "selected" : "";
+        options.Append($"<option value='{chatRoom.Id}' {selected}>{chatRoom.Name}</option>");
+    }
 }
 
 <div class="container">
-@if (SignInManager.IsSignedIn(User))
-{
     <h1>Chat Room</h1>
+
+    <div class="mb-3">
+        <label for="chatRoomSelect">Select Chat Room:</label>
+        <select id="chatRoomSelect" class="form-control" onchange="location.href='@Url.Page("./Index", new { CurrentChatRoomId = "__id__" })'.replace('__id__', this.value);">
+            @Html.Raw(options.ToString())
+        </select>
+    </div>
+
     <div id="chat" class="border p-3 mb-3" style="max-height: 400px; overflow-y: auto;">
         @foreach (var message in Model.Messages)
         {
@@ -24,21 +32,18 @@
         }
     </div>
 
-    <form method="post">
-        <div class="form-group">
-            <label for="messageInput">Message:</label>
-            <input type="text" id="messageInput" class="form-control" asp-for="NewMessage" />
-        </div>
-        <button type="submit" class="btn btn-primary">Send</button>
-    </form>
-}
-else
-{
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-        </li>
-}
+    @if (User.Identity.IsAuthenticated)
+    {
+        <form method="post">
+            <div class="form-group">
+                <label for="messageInput">Message:</label>
+                <input type="text" id="messageInput" class="form-control" asp-for="NewMessage" />
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    }
+    else
+    {
+        <p>Please <a href="/Account/Login">login</a> to participate in the chat.</p>
+    }
 </div>

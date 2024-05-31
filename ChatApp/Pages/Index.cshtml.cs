@@ -1,75 +1,71 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using ChatApp.Interfaces;
+﻿using ChatApp.Interfaces;
 using ChatApp.Models;
-using ChatApp.Services;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Mvc;
 
-namespace ChatApp.Pages
+public class IndexModel : PageModel
 {
-    public class IndexModel : PageModel
+    private readonly IChatService _chatService;
+    private readonly IBotService _botService;
+    private readonly UserManager<IdentityUser> _userManager;
+    private readonly ILogger<IndexModel> _logger;
+
+    public IndexModel(IChatService chatService, IBotService botService,
+        UserManager<IdentityUser> userManager, ILogger<IndexModel> logger)
     {
-        private readonly IChatService _chatService;
-        private readonly IBotService _botService;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly ILogger<IndexModel> _logger;
+        _chatService = chatService;
+        _botService = botService;
+        _userManager = userManager;
+        _logger = logger;
+    }
 
-        public IndexModel(IChatService chatService, IBotService botService,
-            UserManager<IdentityUser> userManager, ILogger<IndexModel> logger)
+    public IEnumerable<ChatMessage> Messages { get; set; }
+    public IEnumerable<ChatRoom> ChatRooms { get; set; }
+    public int CurrentChatRoomId { get; set; }
+
+    [BindProperty]
+    public string NewMessage { get; set; }
+
+    public async Task OnGetAsync(int? currentChatRoomId)
+    {
+        ChatRooms = _chatService.GetChatRooms();
+        CurrentChatRoomId = currentChatRoomId ?? ChatRooms.FirstOrDefault()?.Id ?? 0;
+        Messages = _chatService.GetRecentMessages(CurrentChatRoomId);
+    }
+
+    public async Task<IActionResult> OnPostAsync()
+    {
+        if (!User.Identity.IsAuthenticated)
         {
-            _chatService = chatService;
-            _botService = botService;
-            _userManager = userManager;
-            _logger = logger;
+            return RedirectToPage("/Account/Login", new { area = "Identity" });
         }
 
-        public IEnumerable<ChatMessage> Messages { get; set; }
-
-        [BindProperty]
-        public string NewMessage { get; set; }
-
-        public async Task OnGetAsync()
+        if (ModelState.IsValid)
         {
-            Messages = _chatService.GetRecentMessages();
-        }
-
-        public async Task<IActionResult> OnPostAsync()
-        {
-            if (!User.Identity.IsAuthenticated)
+            var user = await _userManager.GetUserAsync(User);
+            var message = new ChatMessage
             {
-                return RedirectToPage("/Account/Login", new { area = "Identity" });
+                UserId = user.Id,
+                Username = user.UserName,
+                Message = NewMessage,
+                Timestamp = DateTime.UtcNow,
+                ChatRoomId = CurrentChatRoomId
+            };
+
+            if (message.Message.StartsWith("/stock="))
+            {
+                await _botService.ProcessCommandAsync(message.Message);
+            }
+            else
+            {
+                _chatService.AddMessage(message);
             }
 
-            if (ModelState.IsValid)
-            {
-                var user = await _userManager.GetUserAsync(User);
-                var message = new ChatMessage
-                {
-                    UserId = user.Id,
-                    Username = user.UserName,
-                    Message = NewMessage,
-                    Timestamp = DateTime.UtcNow
-                };
-
-                if (message.Message.StartsWith("/stock="))
-                {
-                    await _botService.ProcessCommandAsync(message.Message);
-                }
-                else
-                {
-                    _chatService.AddMessage(message);
-                }
-
-                // Reload messages
-                Messages = _chatService.GetRecentMessages();
-            }
-
-            return Page();
+            // Reload messages
+            Messages = _chatService.GetRecentMessages(CurrentChatRoomId);
         }
+
+        return Page();
     }
 }
