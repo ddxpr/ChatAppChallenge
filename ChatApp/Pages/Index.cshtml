@@ -1,0 +1,33 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Chat";
+}
+
+<div class="container">
+    <h1>Chat Room</h1>
+    <div id="chat" class="border p-3 mb-3" style="max-height: 400px; overflow-y: auto;">
+        @foreach (var message in Model.Messages)
+        {
+            <div class="mb-2">
+                <span>@message.Username:</span> @message.Message
+                <span class="text-muted">(@message.Timestamp.ToString("yyyy-MM-dd HH:mm:ss"))</span>
+            </div>
+        }
+    </div>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <form method="post">
+            <div class="form-group">
+                <label for="messageInput">Message:</label>
+                <input type="text" id="messageInput" class="form-control" asp-for="NewMessage" />
+            </div>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    }
+    else
+    {
+        <p>Please <a href="/Account/Login">login</a> to participate in the chat.</p>
+    }
+</div>
