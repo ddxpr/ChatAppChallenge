@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using ChatApp.Interfaces;
 using ChatApp.Models;
+using ChatApp.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -33,13 +35,6 @@ namespace ChatApp.Pages
 
         public async Task OnGetAsync()
         {
-            if (!User.Identity.IsAuthenticated)
-            {
-                // Redirect to login page if not authenticated
-                Response.Redirect("/Account/Login?returnUrl=/");
-                return;
-            }
-
             Messages = _chatService.GetRecentMessages();
         }
 

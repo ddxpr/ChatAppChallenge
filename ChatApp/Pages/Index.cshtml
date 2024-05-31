@@ -16,18 +16,11 @@
         }
     </div>
 
-    @if (User.Identity.IsAuthenticated)
-    {
-        <form method="post">
-            <div class="form-group">
-                <label for="messageInput">Message:</label>
-                <input type="text" id="messageInput" class="form-control" asp-for="NewMessage" />
-            </div>
-            <button type="submit" class="btn btn-primary">Send</button>
-        </form>
-    }
-    else
-    {
-        <p>Please <a href="/Account/Login">login</a> to participate in the chat.</p>
-    }
+    <form method="post">
+        <div class="form-group">
+            <label for="messageInput">Message:</label>
+            <input type="text" id="messageInput" class="form-control" asp-for="NewMessage" />
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+    </form>
 </div>
