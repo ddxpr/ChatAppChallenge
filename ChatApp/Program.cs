@@ -43,7 +43,7 @@ builder.Services.AddSingleton<IConnection>(sp =>
     return factory.CreateConnection();
 });
 
-// Other Services - Use AddScoped instead of AddSingleton
+
 builder.Services.AddScoped<IBotService, BotService>();
 builder.Services.AddScoped<IChatService, ChatService>();
 
